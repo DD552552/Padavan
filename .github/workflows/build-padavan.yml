@@ -1,0 +1,129 @@
+#################################################################################################
+# 修改 TNAME: R2100 中的R2100为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
+# 小米AC2100型号为R2100
+# 红米AC2100型号为RM2100
+#################################################################################################
+name: Build Padavan
+
+on: 
+  release:
+    types: [published]
+  push:
+    tags:
+    - 'v*'
+  #  branches: 
+  #    - master
+#  schedule:
+#    - cron: 0 8 * * 5
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd fakeroot \
+        cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
+    - name: Clone source code
+      run: |
+        git clone --depth=1 https://github.com/hanwckf/rt-n56u.git /opt/rt-n56u
+        cd /opt/rt-n56u/toolchain-mipsel
+        sh dl_toolchain.sh
+        mkdir -p /opt/images/
+    - name: Build Firmware
+      env:
+        TNAME: R2100
+      run: |
+        cd /opt/rt-n56u/trunk
+        if [ ! -f configs/templates/$TNAME.config ] ; then
+        echo "configs/templates/$TNAME.config not found "
+        exit 1
+        fi
+        #cp -f configs/templates/$TNAME.config .config
+        sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' configs/templates/$TNAME.config
+        ###################################################################################################
+        # 因不同型号配置功能不一样，所以先把配置项删除，如果你自己要添加其他的，也要写上删除这一条，切记！！！
+        ###################################################################################################
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_LANG_UK/d' configs/templates/$TNAME.config      #删除配置项英文界面
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_QOS/d' configs/templates/$TNAME.config          #删除配置项QOS
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMBD36/d' configs/templates/$TNAME.config       #删除配置项SMBD36
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNS_SSL/d' configs/templates/$TNAME.config     #删除配置项DDNS_SSL
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTTPS/d' configs/templates/$TNAME.config        #删除配置项HTTPS
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' configs/templates/$TNAME.config      #删除配置项OPENVPN
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW/d' configs/templates/$TNAME.config   #删除配置项FFMPEG_NEW
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XUPNPD/d' configs/templates/$TNAME.config       #删除配置项XUPNPD
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DOGCOM/d' configs/templates/$TNAME.config       #删除配置项DOGCOM
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' configs/templates/$TNAME.config  #删除配置项SS plus+
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' configs/templates/$TNAME.config #删除配置项DNSFORWARDER
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VLMCSD/d' configs/templates/$TNAME.config       #删除配置项VLMCSD
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TTYD/d' configs/templates/$TNAME.config         #删除配置项TTYD
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NAPT66/d' configs/templates/$TNAME.config       #删除配置项NAPT66
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SRELAY/d' configs/templates/$TNAME.config       #删除配置项SRELAY
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOCAT/d' configs/templates/$TNAME.config        #删除配置项SOCAT
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MTR/d' configs/templates/$TNAME.config          #删除配置项MTR
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPERF3/d' configs/templates/$TNAME.config       #删除配置项IPERF3
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NANO/d' configs/templates/$TNAME.config         #删除配置项NANO
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTOP/d' configs/templates/$TNAME.config         #删除配置项HTOP
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_LRZSZ/d' configs/templates/$TNAME.config        #删除配置项LRZSZ
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CURL/d' configs/templates/$TNAME.config         #删除配置项CURL
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSH/d' configs/templates/$TNAME.config      #删除配置项OPENSSH
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SFTP/d' configs/templates/$TNAME.config         #删除配置项SFTP
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TCPDUMP/d' configs/templates/$TNAME.config      #删除配置项TCPDUMP
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_EAP_PEAP/d' configs/templates/$TNAME.config     #删除配置项EAP_PEAP
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC/d' configs/templates/$TNAME.config   #删除配置项OPENSSL_EC
+        ####################################################################
+        # 以下选项是定义你需要的功能（y=集成,n=忽略），重新写入到.config文件。
+        ####################################################################
+        echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> configs/templates/$TNAME.config      #设置界面简体中文
+        echo "CONFIG_FIRMWARE_INCLUDE_QOS=n" >> configs/templates/$TNAME.config          #删除QOS
+        echo "CONFIG_FIRMWARE_INCLUDE_SMBD36=y" >> configs/templates/$TNAME.config       #使用SMBD36新版本
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=n" >> configs/templates/$TNAME.config     #删除DDNS_SSL
+        echo "CONFIG_FIRMWARE_INCLUDE_HTTPS=n" >> configs/templates/$TNAME.config        #删除HTTPS
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=n" >> configs/templates/$TNAME.config      #删除OPENVPN
+        echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=y" >> configs/templates/$TNAME.config   #使用FFMPEG新版本
+        echo "CONFIG_FIRMWARE_INCLUDE_XUPNPD=n" >> configs/templates/$TNAME.config       #删除用于IPTV的XUPNPD
+        echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> configs/templates/$TNAME.config       #删除用于Drcom的工具DOGCOM
+        echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> configs/templates/$TNAME.config  #删除SS plus+
+        echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> configs/templates/$TNAME.config #删除DNSFORWARDER
+        echo "CONFIG_FIRMWARE_INCLUDE_VLMCSD=n" >> configs/templates/$TNAME.config       #删除用于KMS的工具VLMCSD
+        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=n" >> configs/templates/$TNAME.config         #删除网页终端模拟器TTYD
+        echo "CONFIG_FIRMWARE_INCLUDE_NAPT66=n" >> configs/templates/$TNAME.config       #删除用于二级路由、教育网分发IPv6地址的NAPT66
+        echo "CONFIG_FIRMWARE_INCLUDE_SRELAY=n" >> configs/templates/$TNAME.config       #删除SRELAY
+        echo "CONFIG_FIRMWARE_INCLUDE_SOCAT=n" >> configs/templates/$TNAME.config        #删除工具SOCAT
+        echo "CONFIG_FIRMWARE_INCLUDE_MTR=n" >> configs/templates/$TNAME.config          #删除工具MTR
+        echo "CONFIG_FIRMWARE_INCLUDE_IPERF3=n" >> configs/templates/$TNAME.config       #删除工具IPERF3
+        echo "CONFIG_FIRMWARE_INCLUDE_NANO=n" >> configs/templates/$TNAME.config         #删除工具NANO
+        echo "CONFIG_FIRMWARE_INCLUDE_HTOP=n" >> configs/templates/$TNAME.config         #删除工具HTOP
+        echo "CONFIG_FIRMWARE_INCLUDE_LRZSZ=n" >> configs/templates/$TNAME.config        #删除工具LRZSZ
+        echo "CONFIG_FIRMWARE_INCLUDE_CURL=n" >> configs/templates/$TNAME.config         #删除工具CURL
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSH=n" >> configs/templates/$TNAME.config      #删除OPENSSH
+        echo "CONFIG_FIRMWARE_INCLUDE_SFTP=n" >> configs/templates/$TNAME.config         #删除SFTP
+        echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=n" >> configs/templates/$TNAME.config      #删除TCPDUMP
+        echo "CONFIG_FIRMWARE_INCLUDE_EAP_PEAP=n" >> configs/templates/$TNAME.config     #删除EAP_PEAP
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EC=n" >> configs/templates/$TNAME.config   #删除OPENSSL_EC
+        #########################################################################################
+        # 自定义添加其它功能请参考源码configs/templates/目录下的config文件。按照上面的格式添加即可
+        # 格式如下：
+        # sed -i '/自定义项/d' .config
+        # echo "自定义项=y" >> .config
+        #########################################################################################
+        sudo ./clear_tree
+        sudo fakeroot ./build_firmware_modify $TNAME
+        #sudo ./build_firmware_modify $TNAME 0
+        sudo mv -f images/*.trx /opt/images/
+    - name : Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: Padavan-packages
+        path: /opt/images
