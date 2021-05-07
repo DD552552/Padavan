@@ -36,13 +36,13 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       run: |
-        git clone --depth=1 https://github.com/hanwckf/rt-n56u.git /opt/rt-n56u
+        git clone --depth=1 https://github.com/DD552552/rt-n56u.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
     - name: Build Firmware
       env:
-        TNAME: R2100
+        TNAME: PSG1218
       run: |
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
@@ -86,11 +86,11 @@ jobs:
         ####################################################################
         echo "CONFIG_FIRMWARE_INCLUDE_LANG_CN=y" >> configs/templates/$TNAME.config      #设置界面简体中文
         echo "CONFIG_FIRMWARE_INCLUDE_QOS=n" >> configs/templates/$TNAME.config          #删除QOS
-        echo "CONFIG_FIRMWARE_INCLUDE_SMBD36=y" >> configs/templates/$TNAME.config       #使用SMBD36新版本
+        echo "CONFIG_FIRMWARE_INCLUDE_SMBD36=n" >> configs/templates/$TNAME.config       #使用SMBD36新版本
         echo "CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=n" >> configs/templates/$TNAME.config     #删除DDNS_SSL
         echo "CONFIG_FIRMWARE_INCLUDE_HTTPS=n" >> configs/templates/$TNAME.config        #删除HTTPS
         echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=n" >> configs/templates/$TNAME.config      #删除OPENVPN
-        echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=y" >> configs/templates/$TNAME.config   #使用FFMPEG新版本
+        echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n" >> configs/templates/$TNAME.config   #使用FFMPEG新版本
         echo "CONFIG_FIRMWARE_INCLUDE_XUPNPD=n" >> configs/templates/$TNAME.config       #删除用于IPTV的XUPNPD
         echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> configs/templates/$TNAME.config       #删除用于Drcom的工具DOGCOM
         echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=n" >> configs/templates/$TNAME.config  #删除SS plus+
